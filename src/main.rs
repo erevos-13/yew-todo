@@ -1,5 +1,7 @@
-use components::{card::Card, input_ref::InputComponent, nav_bar::NavBar};
-use web_sys::HtmlInputElement;
+use components::{
+    card::Card, input_ref::InputComponent, nav_bar::NavBar, textarea::TextareaComponent,
+};
+use web_sys::{console::log, HtmlInputElement};
 use yew::prelude::*;
 
 mod components;
@@ -7,11 +9,18 @@ pub enum Msg {
     HoverIndex(usize),
     Submit,
 }
+
+#[derive(Properties, PartialEq, Clone, Debug)]
+pub struct Note {
+    title: String,
+    content: String,
+}
 pub struct App {
     refs: Vec<NodeRef>,
     focus_index: usize,
     title_error: String,
     content_error: String,
+    notes: Vec<Note>,
 }
 impl App {
     fn apply_focus(&self) {
@@ -30,6 +39,7 @@ impl Component for App {
             refs: vec![NodeRef::default(), NodeRef::default()],
             title_error: "".to_string(),
             content_error: "".to_string(),
+            notes: vec![],
         }
     }
 
@@ -47,22 +57,34 @@ impl Component for App {
                 false
             }
             Msg::Submit => {
+                let mut correct_content = true;
                 let title = &self.refs[0];
                 let content = &self.refs[1];
-                let title_value = title.cast::<HtmlInputElement>().unwrap().value();
-                let content_value = content.cast::<HtmlInputElement>().unwrap().value();
+                let mut title_value = title.cast::<HtmlInputElement>().unwrap().value();
+                let mut content_value = content.cast::<HtmlInputElement>().unwrap().value();
 
                 self.title_error.clear();
                 self.content_error.clear();
 
-                if !(title_value.contains('^') && title_value.contains('%')) {
+                if title_value.contains('^') && title_value.contains('%') {
                     self.title_error
-                        .push_str("Invalid Title please do not add '^' or '%'.")
+                        .push_str("Invalid Title please do not add '^' or '%'.");
+                    correct_content = false;
                 }
                 if content_value.len() < 8 {
                     self.content_error
-                        .push_str("Content must be at least 50 characters long.")
+                        .push_str("Content must be at least 50 characters long.");
+                    correct_content = false;
                 }
+                if correct_content {
+                    self.notes.push(Note {
+                        title: title_value,
+                        content: content_value,
+                    });
+                    title.cast::<HtmlInputElement>().unwrap().set_value("");
+                    content.cast::<HtmlInputElement>().unwrap().set_value("");
+                }
+
                 true
             }
         }
@@ -86,17 +108,28 @@ impl Component for App {
                         </div>
                         <div class="input-container">
                             <label>{ "Content" }</label>
-                            <InputComponent
-                                input_ref={&self.refs[1]}
+                            <TextareaComponent
+                                textarea_ref={&self.refs[1]}
                                 on_hover={ctx.link().callback(|_| Msg::HoverIndex(1))}
-                                placeholder="content"
+                                placeholder="Content"
                             />
                             <div class="error">{self.content_error.clone()}</div>
                         </div>
                         <button onclick={ctx.link().callback(|_| Msg::Submit)}>{"Create"}</button>
                     </div>
-                </div>
             </div>
+            <div>
+                {
+                self.notes.clone().into_iter().map(|note| {
+                    html! {
+                        <Card title={note.title} content={note.content} />
+                    }
+                }).collect::<Html>()
+
+            }
+            </div>
+
+        </div>
         }
     }
 }
