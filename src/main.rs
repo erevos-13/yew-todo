@@ -12,6 +12,7 @@ pub enum Msg {
 
 #[derive(Properties, PartialEq, Clone, Debug)]
 pub struct Note {
+    id: i32,
     title: String,
     content: String,
 }
@@ -60,8 +61,8 @@ impl Component for App {
                 let mut correct_content = true;
                 let title = &self.refs[0];
                 let content = &self.refs[1];
-                let mut title_value = title.cast::<HtmlInputElement>().unwrap().value();
-                let mut content_value = content.cast::<HtmlInputElement>().unwrap().value();
+                let title_value = title.cast::<HtmlInputElement>().unwrap().value();
+                let content_value = content.cast::<HtmlInputElement>().unwrap().value();
 
                 self.title_error.clear();
                 self.content_error.clear();
@@ -78,6 +79,7 @@ impl Component for App {
                 }
                 if correct_content {
                     self.notes.push(Note {
+                        id: self.focus_index as i32,
                         title: title_value,
                         content: content_value,
                     });
@@ -91,6 +93,11 @@ impl Component for App {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        let on_click_card: Callback<i32> = Callback::from(move |note_id: i32| {
+            let greeting = format!("Hey, {}!", note_id);
+            web_sys::console::log_1(&greeting.into()); // if uncommented will print
+        });
+
         html! {
         <div class="container">
             <NavBar />
@@ -118,11 +125,13 @@ impl Component for App {
                         <button onclick={ctx.link().callback(|_| Msg::Submit)}>{"Create"}</button>
                     </div>
             </div>
-            <div>
+            <div class="notes-container">
                 {
                 self.notes.clone().into_iter().map(|note| {
                     html! {
-                        <Card title={note.title} content={note.content} />
+                    <div  class="item">
+                        <Card  id={note.id} title={note.title} content={note.content} />
+                    </div>
                     }
                 }).collect::<Html>()
 
@@ -133,25 +142,6 @@ impl Component for App {
         }
     }
 }
-
-// #[function_component]
-// fn App() -> Html {
-//     let note = use_node_ref();
-
-//     html! {
-//         <div class={classes!("container")}>
-//             <NavBar />
-//             <div class={classes!("content")}>
-//                 <div>
-//                     <InputComponent
-//                                 input_ref={note}
-//                                 placeholder="password" />
-//                 </div>
-//                 <Card title={String::from("Test Title")} content={String::from("content test")} />
-//             </div>
-//         </div>
-//     }
-// }
 
 fn main() {
     yew::Renderer::<App>::new().render();

@@ -85,3 +85,13 @@ button:hover {
   justify-content: center;
   width: 50%;
 }
+.notes-container {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  padding: 10px;
+}
+.item {
+  // padding: 20px;
+  font-size: 30px;
+  text-align: center;
+}

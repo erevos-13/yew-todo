@@ -2,6 +2,7 @@ use yew::prelude::*;
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct CardProps {
+    pub id: i32,
     pub title: String,
     pub content: String,
 }
